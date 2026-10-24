@@ -1,14 +1,15 @@
-import { initExport } from "./export.js?v=1792878371";
-import { initNotifications, stopNotifications } from "./notifications.js?v=1792878371";
-import { initCalendar, stopCalendar } from "./calendar.js?v=1792878371";
-import { auth, ALLOWED_EMAIL } from "./firebase-config.js?v=1792878371";
+import { initOnboarding } from "./onboarding.js?v=1792879063";
+import { initExport } from "./export.js?v=1792879063";
+import { initNotifications, stopNotifications } from "./notifications.js?v=1792879063";
+import { initCalendar, stopCalendar } from "./calendar.js?v=1792879063";
+import { auth, ALLOWED_EMAIL } from "./firebase-config.js?v=1792879063";
 import {
   GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword,
   onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { initGroups, stopGroups } from "./groups.js?v=1792878371";
-import { initAppointments, stopAppointments } from "./appointments.js?v=1792878371";
-import { initRouter, refreshIcons, welcomeDialog } from "./ui.js?v=1792878371";
+import { initGroups, stopGroups } from "./groups.js?v=1792879063";
+import { initAppointments, stopAppointments } from "./appointments.js?v=1792879063";
+import { initRouter, refreshIcons, welcomeDialog } from "./ui.js?v=1792879063";
 
 const $ = (id) => document.getElementById(id);
 
@@ -69,3 +70,5 @@ $("logout-btn").addEventListener("click", async () => {
 });
 
 refreshIcons();
+
+initOnboarding();

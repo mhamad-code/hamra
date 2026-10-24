@@ -1,4 +1,4 @@
-import { fmtTime, fmtDate, refreshIcons, MONTHS } from "./ui.js?v=1792878371";
+import { fmtTime, fmtDate, refreshIcons, MONTHS } from "./ui.js?v=1792879063";
 
 const PERSONAL_COLOR = "#FF7A90";
 const DAYS_FULL = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];

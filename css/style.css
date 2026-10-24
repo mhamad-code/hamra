@@ -623,3 +623,71 @@ html[data-boot="app"] #login-view { display: none; }
 .td-count { font-size: 1.25rem; line-height: 1.7; font-variant-numeric: tabular-nums; }
 .td-count b { font-weight: 800; }
 .td-count b.sec { color: #7a4dd8; }
+
+/* ===== زر المعلومات وتثبيت التطبيق ===== */
+.hbtns { display: flex; gap: 8px; }
+.install-chip { align-self: center; display: inline-flex; align-items: center; gap: 8px; width: auto; padding: 10px 18px; font-size: .9rem; }
+.install-chip svg { margin: 0; }
+
+/* ===== شاشة الشرح ===== */
+.onb {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; flex-direction: column; overflow: hidden;
+  padding: max(16px, env(safe-area-inset-top)) 22px max(20px, env(safe-area-inset-bottom));
+  background: linear-gradient(135deg, #fff4e0 0%, #f1e8ff 50%, #dffbf5 100%);
+  opacity: 0; transition: opacity .3s;
+}
+.onb.show { opacity: 1; }
+.onb > *:not(.onb-blobs) { position: relative; z-index: 1; }
+.onb-blobs { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.onb-blobs span { position: absolute; border-radius: 50%; filter: blur(60px); opacity: .7; animation: float 16s ease-in-out infinite; }
+.onb-blobs span:nth-child(1) { width: 280px; height: 280px; background: var(--primary); top: -80px; right: -60px; }
+.onb-blobs span:nth-child(2) { width: 320px; height: 320px; background: var(--secondary); bottom: -100px; left: -80px; animation-delay: -5s; }
+.onb-blobs span:nth-child(3) { width: 220px; height: 220px; background: var(--tertiary); top: 45%; left: 35%; animation-delay: -9s; }
+
+.onb-top { display: flex; align-items: center; justify-content: space-between; min-height: 40px; }
+.onb-count { font-size: .85rem; opacity: .55; font-weight: 600; }
+.onb-skip { width: auto; padding: 7px 16px; background: rgba(255,255,255,.6); box-shadow: none; font-weight: 600; font-size: .9rem; }
+.onb-skip:hover { transform: none; filter: none; box-shadow: none; }
+
+.onb-slide {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; text-align: center; animation: onbIn .45s cubic-bezier(.2,.8,.2,1) both;
+}
+.onb-slide.fwd { --x: -40px; }
+.onb-slide.back { --x: 40px; }
+@keyframes onbIn { from { opacity: 0; transform: translateX(var(--x, 0)); } to { opacity: 1; transform: none; } }
+
+.onb-ic {
+  width: 108px; height: 108px; border-radius: 34px; margin-bottom: 8px;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  box-shadow: 0 14px 36px rgba(255,178,62,.5), inset 0 1px 0 rgba(255,255,255,.6);
+  animation: bob 4s ease-in-out infinite;
+}
+.onb-ic svg { width: 52px; height: 52px; margin: 0; }
+.onb-slide h2 { margin: 0; font-size: 1.75rem; line-height: 1.25; }
+.onb-slide > p { margin: 0; max-width: 340px; line-height: 1.9; opacity: .75; }
+
+.onb-points { list-style: none; width: 100%; max-width: 380px; margin: 6px 0 0; padding: 14px 16px; display: grid; gap: 12px; text-align: start; border-radius: var(--r-lg); }
+.onb-points li { display: flex; align-items: center; gap: 12px; font-size: .92rem; line-height: 1.6; }
+.onb-points svg { width: 20px; height: 20px; margin: 0; color: #7a4dd8; flex: none; }
+
+.onb-install { width: 100%; max-width: 380px; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; }
+.onb-install svg { margin: 0; }
+.onb-hint { display: flex; align-items: center; gap: 8px; max-width: 340px; margin: 8px 0 0; font-size: .85rem; line-height: 1.7; opacity: .7; }
+.onb-hint svg { width: 18px; height: 18px; margin: 0; flex: none; }
+
+.onb-dots { display: flex; justify-content: center; gap: 8px; margin: 14px 0; }
+.onb-dots i { width: 8px; height: 8px; border-radius: 999px; background: rgba(27,18,48,.2); transition: width .3s, background .3s; }
+.onb-dots i.on { width: 28px; background: linear-gradient(90deg, var(--primary), var(--secondary)); }
+
+.onb-actions { display: flex; gap: 10px; }
+.onb-actions button { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.onb-actions button svg { margin: 0; }
+.onb-actions [data-a="next"] { flex: 1; }
+.onb-actions .ghost { width: auto; padding: 13px 18px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .onb-ic, .onb-blobs span, .onb-slide { animation: none; }
+}

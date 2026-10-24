@@ -1,13 +1,13 @@
-import { renderToday, stopToday } from "./today.js?v=1792878371";
-import { skCards } from "./ui.js?v=1792878371";
-import { db } from "./firebase-config.js?v=1792878371";
+import { renderToday, stopToday } from "./today.js?v=1792879063";
+import { skCards } from "./ui.js?v=1792879063";
+import { db } from "./firebase-config.js?v=1792879063";
 import {
   collection, addDoc, updateDoc, deleteDoc, doc, getDocs, writeBatch,
   onSnapshot, query, orderBy, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {
   go, state, openSheet, pickDate, pickTime, fmtDate, fmtTime, refreshIcons, dialog, toast
-} from "./ui.js?v=1792878371";
+} from "./ui.js?v=1792879063";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") => String(s).replace(/[&<>"']/g, (c) =>

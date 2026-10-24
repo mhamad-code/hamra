@@ -4,8 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>الأستاذ محمود حديري</title>
-  <link rel="stylesheet" href="css/style.css?v=1792878371">
-  <link rel="stylesheet" href="css/print.css?v=1792878371">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#B892FF">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="مواعيد الأستاذ">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/style.css?v=1792879063">
+  <link rel="stylesheet" href="css/print.css?v=1792879063">
 <script>
     try { if (localStorage.getItem("tm_in") === "1") document.documentElement.setAttribute("data-boot", "app"); } catch (e) {}
   </script>
@@ -63,6 +70,8 @@
         <p id="login-error" class="error"></p>
       </div>
       <p class="foot"><i data-lucide="shield-check"></i> الدخول مخصص للأستاذ فقط</p>
+      <button id="install-btn" class="install-chip ghost hidden" type="button"><i data-lucide="download"></i>تثبيت التطبيق</button>
+      <p id="ios-hint" class="foot hidden">للتثبيت على الآيفون: زر المشاركة ثم «إضافة إلى الشاشة الرئيسية»</p>
     </div>
   </section>
 
@@ -70,7 +79,10 @@
   <section id="app-view" class="view hidden">
     <header>
       <div class="brand"><i data-lucide="graduation-cap"></i><h2>الأستاذ محمود حديري</h2></div>
-      <button id="logout-btn" class="icon-btn" aria-label="خروج"><i data-lucide="log-out"></i></button>
+      <div class="hbtns">
+        <button id="info-btn" class="icon-btn" aria-label="عن التطبيق"><i data-lucide="info"></i></button>
+        <button id="logout-btn" class="icon-btn" aria-label="خروج"><i data-lucide="log-out"></i></button>
+      </div>
     </header>
 
     <main>
@@ -247,7 +259,14 @@
     <div id="sheet-body" class="sheet-card glass"></div>
   </div>
 
+  <div id="onboarding" class="onb hidden"></div>
+
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.453.0/dist/umd/lucide.min.js"></script>
-  <script type="module" src="js/app.js?v=1792878371"></script>
+  <script type="module" src="js/app.js?v=1792879063"></script>
+<script>
+    if ("serviceWorker" in navigator) {
+      addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+    }
+  </script>
 </body>
 </html>
