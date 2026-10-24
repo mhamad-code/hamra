@@ -1,12 +1,13 @@
-import { skCards } from "./ui.js?v=1792877538";
-import { db } from "./firebase-config.js?v=1792877538";
+import { renderToday, stopToday } from "./today.js?v=1792878025";
+import { skCards } from "./ui.js?v=1792878025";
+import { db } from "./firebase-config.js?v=1792878025";
 import {
   collection, addDoc, updateDoc, deleteDoc, doc, getDocs, writeBatch,
   onSnapshot, query, orderBy, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {
   go, state, openSheet, pickDate, pickTime, fmtDate, fmtTime, refreshIcons, dialog, toast
-} from "./ui.js?v=1792877538";
+} from "./ui.js?v=1792878025";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") => String(s).replace(/[&<>"']/g, (c) =>
@@ -231,6 +232,7 @@ function render() {
     $("ap-count").textContent = "";
     $("ap-empty").classList.add("hidden");
     $("ap-list").innerHTML = skCards(2) + skCards(2);
+    renderToday(null);
     return;
   }
   const sorted = [...appts].sort((a, b) =>
@@ -249,6 +251,7 @@ function render() {
     }
   }
 
+  renderToday({ appts, groups });
   $("ap-count").textContent = entries.length;
   $("ap-empty").classList.toggle("hidden", entries.length > 0);
 
@@ -668,5 +671,6 @@ export function stopAppointments() {
   if (unsubG) unsubG();
   unsubA = unsubG = null;
   gLoaded = aLoaded = false;
+  stopToday();
   started = false;
 }
