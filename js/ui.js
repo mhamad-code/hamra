@@ -46,7 +46,7 @@ export function initRouter() {
 }
 
 /* ===== النافذة السفلية ===== */
-function openSheet(setup) {
+export function openSheet(setup) {
   return new Promise((resolve) => {
     const sheet = $("sheet");
     const finish = (v) => {

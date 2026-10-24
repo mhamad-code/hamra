@@ -4,7 +4,7 @@ import {
   onSnapshot, query, orderBy, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {
-  go, state, pickDate, pickTime, fmtDate, fmtTime, refreshIcons, dialog, toast
+  go, state, openSheet, pickDate, pickTime, fmtDate, fmtTime, refreshIcons, dialog, toast
 } from "./ui.js";
 
 const $ = (id) => document.getElementById(id);
@@ -138,46 +138,227 @@ function resetForm() {
 }
 
 /* ===== عرض القائمة ===== */
+let openSid = null, sheetFinish = null;
+
+const durText = (m) => {
+  const h = Math.floor(m / 60), r = m % 60, p = [];
+  if (h === 1) p.push("ساعة"); else if (h === 2) p.push("ساعتان"); else if (h > 2) p.push(`${h} ساعات`);
+  if (r) p.push(`${r} دقيقة`);
+  return p.join(" و ");
+};
+
+function relText(date) {
+  const diff = Math.round((new Date(date + "T00:00:00") - new Date(todayStr() + "T00:00:00")) / 86400000);
+  if (diff <= 0) return "اليوم";
+  if (diff === 1) return "غداً";
+  if (diff === 2) return "بعد يومين";
+  if (diff <= 10) return `بعد ${diff} أيام`;
+  return `بعد ${diff} يوم`;
+}
+
+function aColor(a) {
+  if (a.kind === "personal") return PERSONAL_COLOR;
+  const g = groups.find((x) => x.id === a.groupId);
+  return g ? g.color : "#B892FF";
+}
+function aWho(a) {
+  if (a.kind === "personal") return "";
+  if (a.groupId) { const g = groups.find((x) => x.id === a.groupId); return g ? g.name : "مجموعة محذوفة"; }
+  return a.studentName || "طالب فردي";
+}
+function aTagHtml(a) {
+  return a.kind === "personal"
+    ? '<span class="tag"><i data-lucide="user-round"></i>موعد خاص</span>'
+    : a.groupId
+      ? '<span class="tag"><i data-lucide="users"></i>درس مجموعة</span>'
+      : '<span class="tag"><i data-lucide="user"></i>درس فردي</span>';
+}
+
+function weekdaysOf(items) {
+  const c = {};
+  items.forEach((a) => { const d = new Date(a.date + "T00:00:00").getDay(); c[d] = (c[d] || 0) + 1; });
+  const mx = Math.max(...Object.values(c));
+  return Object.keys(c).map(Number).filter((d) => c[d] * 3 >= mx).sort((a, b) => a - b);
+}
+
+function seriesItems(sid) {
+  return appts.filter((a) => a.seriesId === sid)
+    .sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
+}
+
+function singleCard(a) {
+  const color = aColor(a), who = aWho(a);
+  return `
+    <div class="ap-item glass" data-id="${a.id}" style="--c:${color}">
+      <div class="ap-time"><b>${fmtTime(a.startTime)}</b><small>${fmtTime(addMinutes(a.startTime, a.durationMin))}</small></div>
+      <div class="ap-body">
+        ${aTagHtml(a)}
+        <strong>${esc(a.title)}</strong>
+        ${who ? `<span class="meta"><i class="dot" style="background:${color}"></i>${esc(who)}</span>` : ""}
+        ${a.location ? `<span class="meta"><i data-lucide="map-pin"></i>${esc(a.location)}</span>` : ""}
+        ${a.notes ? `<span class="meta"><i data-lucide="sticky-note"></i>${esc(a.notes)}</span>` : ""}
+      </div>
+      <div class="ap-actions">
+        <button class="icon-btn" data-act="edit" aria-label="تعديل"><i data-lucide="pencil"></i></button>
+        <button class="icon-btn danger" data-act="del" aria-label="حذف"><i data-lucide="trash-2"></i></button>
+      </div>
+    </div>`;
+}
+
+function seriesCard(en) {
+  const items = en.items, f = items[0], l = items[items.length - 1];
+  const color = aColor(f), who = aWho(f);
+  const wd = weekdaysOf(items).map((d) => SHORT_DAYS[d]).join(" و ");
+  return `
+    <div class="ap-item ap-series glass" data-sid="${en.sid}" style="--c:${color}" role="button" tabindex="0">
+      <div class="ap-time"><b>${fmtTime(f.startTime)}</b><small>${fmtTime(addMinutes(f.startTime, f.durationMin))}</small></div>
+      <div class="ap-body">
+        ${aTagHtml(f)}
+        <strong>${esc(f.title)} <i data-lucide="repeat" class="rep"></i></strong>
+        ${who ? `<span class="meta"><i class="dot" style="background:${color}"></i>${esc(who)}</span>` : ""}
+        <span class="meta"><i data-lucide="repeat"></i>كل ${wd}</span>
+        <span class="meta"><i data-lucide="calendar-clock"></i>${items.length} موعد قادم · حتى ${fmtDate(l.date)}</span>
+        <span class="next-pill">الجاي: ${relText(f.date)}</span>
+      </div>
+      <i data-lucide="chevron-left" class="chev"></i>
+    </div>`;
+}
+
 function render() {
-  const list = [...appts].sort((a, b) =>
+  const sorted = [...appts].sort((a, b) =>
     a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
-  $("ap-count").textContent = list.length;
-  $("ap-empty").classList.toggle("hidden", list.length > 0);
+
+  const bySid = {}, entries = [];
+  for (const a of sorted) {
+    if (a.seriesId) {
+      if (!bySid[a.seriesId]) {
+        bySid[a.seriesId] = [];
+        entries.push({ series: true, sid: a.seriesId, date: a.date, items: bySid[a.seriesId] });
+      }
+      bySid[a.seriesId].push(a);
+    } else {
+      entries.push({ series: false, date: a.date, a });
+    }
+  }
+
+  $("ap-count").textContent = entries.length;
+  $("ap-empty").classList.toggle("hidden", entries.length > 0);
 
   let html = "", last = "";
-  for (const a of list) {
-    if (a.date !== last) {
+  for (const en of entries) {
+    if (en.date !== last) {
       if (last) html += "</div>";
-      html += `<div class="day"><h4>${fmtDate(a.date)}${a.date === todayStr() ? " · اليوم" : ""}</h4>`;
-      last = a.date;
+      html += `<div class="day"><h4>${fmtDate(en.date)}${en.date === todayStr() ? " · اليوم" : ""}</h4>`;
+      last = en.date;
     }
-    const personal = a.kind === "personal";
-    const g = groups.find((x) => x.id === a.groupId);
-    const who = personal ? "موعد شخصي" : a.groupId ? (g ? g.name : "مجموعة محذوفة") : (a.studentName || "طالب فردي");
-    const color = personal ? PERSONAL_COLOR : (g ? g.color : "#B892FF");
-    const tag = personal
-      ? '<span class="tag"><i data-lucide="user-round"></i>موعد خاص</span>'
-      : a.groupId
-        ? '<span class="tag"><i data-lucide="users"></i>درس مجموعة</span>'
-        : '<span class="tag"><i data-lucide="user"></i>درس فردي</span>';
-    html += `
-      <div class="ap-item glass" data-id="${a.id}" style="--c:${color}">
-        <div class="ap-time"><b>${fmtTime(a.startTime)}</b><small>${fmtTime(addMinutes(a.startTime, a.durationMin))}</small></div>
-        <div class="ap-body">
-          ${tag}<strong>${esc(a.title)}${a.seriesId ? ' <i data-lucide="repeat" class="rep"></i>' : ""}</strong>
-          ${personal ? "" : `<span class="meta"><i class="dot" style="background:${color}"></i>${esc(who)}</span>`}
-          ${a.location ? `<span class="meta"><i data-lucide="map-pin"></i>${esc(a.location)}</span>` : ""}
-          ${a.notes ? `<span class="meta"><i data-lucide="sticky-note"></i>${esc(a.notes)}</span>` : ""}
-        </div>
-        <div class="ap-actions">
-          <button class="icon-btn" data-act="edit" aria-label="تعديل"><i data-lucide="pencil"></i></button>
-          <button class="icon-btn danger" data-act="del" aria-label="حذف"><i data-lucide="trash-2"></i></button>
-        </div>
-      </div>`;
+    html += en.series ? seriesCard(en) : singleCard(en.a);
   }
   if (last) html += "</div>";
   $("ap-list").innerHTML = html;
   refreshIcons();
+  if (openSid) drawSheet();
+}
+
+/* ===== نافذة تفاصيل السلسلة ===== */
+function drawSheet() {
+  const items = seriesItems(openSid);
+  if (!items.length) { if (sheetFinish) sheetFinish(null); return; }
+  const f = items[0], l = items[items.length - 1];
+  const color = aColor(f), who = aWho(f);
+  const wd = weekdaysOf(items).map((d) => SHORT_DAYS[d]).join(" و ");
+
+  $("sheet-body").innerHTML = `
+    <div class="sh-head" style="--c:${color}">
+      <div class="sh-ic"><i data-lucide="repeat"></i></div>
+      <div><h3>${esc(f.title)}</h3>${aTagHtml(f)}</div>
+    </div>
+    <div class="sh-info">
+      <div><i data-lucide="repeat"></i><span>كل ${wd}</span></div>
+      <div><i data-lucide="clock"></i><span>${fmtTime(f.startTime)} – ${fmtTime(addMinutes(f.startTime, f.durationMin))} · ${durText(f.durationMin)}</span></div>
+      <div><i data-lucide="calendar-range"></i><span>من ${fmtDate(f.date)} إلى ${fmtDate(l.date)}</span></div>
+      ${who ? `<div><i data-lucide="users"></i><span>${esc(who)}</span></div>` : ""}
+      ${f.location ? `<div><i data-lucide="map-pin"></i><span>${esc(f.location)}</span></div>` : ""}
+      ${f.notes ? `<div><i data-lucide="sticky-note"></i><span>${esc(f.notes)}</span></div>` : ""}
+    </div>
+    <div class="sh-dates-title">كل المواعيد القادمة (${items.length})</div>
+    <div class="sh-dates">
+      ${items.map((a, i) => `
+        <div class="sh-date ${i === 0 ? "next" : ""}">
+          <span class="n">${i + 1}</span>
+          <div class="d"><b>${fmtDate(a.date)}</b>${i === 0 ? `<small>${relText(a.date)}</small>` : ""}</div>
+          <button type="button" class="icon-btn" data-act="edit-one" data-id="${a.id}" aria-label="تعديل هذا الموعد"><i data-lucide="pencil"></i></button>
+          <button type="button" class="icon-btn danger" data-act="del-one" data-id="${a.id}" aria-label="حذف هذا الموعد"><i data-lucide="trash-2"></i></button>
+        </div>`).join("")}
+    </div>
+    <div class="sh-actions">
+      <button type="button" data-act="edit-series"><i data-lucide="pencil"></i>تعديل السلسلة كاملة</button>
+      <button type="button" class="danger-btn" data-act="del-series"><i data-lucide="trash-2"></i>حذف السلسلة</button>
+      <button type="button" class="ghost" data-act="close">إغلاق</button>
+    </div>`;
+  refreshIcons();
+}
+
+async function onSheetClick(e) {
+  const b = e.target.closest("[data-act]");
+  if (!b || !sheetFinish) return;
+  const act = b.dataset.act;
+  if (act === "close") return sheetFinish(null);
+  if (act === "del-one") {
+    const a = appts.find((x) => x.id === b.dataset.id);
+    if (!a) return;
+    const r = await dialog({
+      icon: "trash-2", tone: "danger", title: "حذف هذا الموعد",
+      text: `بدك تحذف موعد ${fmtDate(a.date)} فقط؟ باقي السلسلة ما رح يتأثر.`,
+      buttons: [{ label: "حذف", value: "yes", danger: true }, { label: "إلغاء", value: null, ghost: true }]
+    });
+    if (r === "yes") {
+      try { await deleteDoc(doc(db, "appointments", a.id)); toast("تم حذف الموعد", "ok"); }
+      catch (err) { console.error(err); toast("تعذّر الحذف", "error"); }
+    }
+    return;
+  }
+  sheetFinish({ act, id: b.dataset.id });
+}
+
+async function delSeries(sid, n) {
+  const r = await dialog({
+    icon: "trash-2", tone: "danger", title: "حذف السلسلة",
+    text: `رح تنحذف كل المواعيد القادمة بهالسلسلة (${n} موعد). المواعيد السابقة بتضل محفوظة.`,
+    buttons: [{ label: "حذف السلسلة", value: "yes", danger: true }, { label: "إلغاء", value: null, ghost: true }]
+  });
+  if (r !== "yes") return;
+  try {
+    const docs = await seriesDocs(sid);
+    for (let i = 0; i < docs.length; i += 400) {
+      const batch = writeBatch(db);
+      docs.slice(i, i + 400).forEach((d) => batch.delete(d.ref));
+      await batch.commit();
+    }
+    toast(`تم حذف ${docs.length} موعد`, "ok");
+  } catch (err) {
+    console.error(err);
+    toast("تعذّر الحذف", "error");
+  }
+}
+
+async function openSeries(sid) {
+  openSid = sid;
+  const res = await openSheet((finish) => {
+    sheetFinish = finish;
+    drawSheet();
+    $("sheet-body").onclick = onSheetClick;
+  });
+  const items = seriesItems(sid);
+  openSid = null; sheetFinish = null;
+  if (!res) return;
+  if (res.act === "edit-one") {
+    const a = appts.find((x) => x.id === res.id);
+    if (a) onEdit({ ...a, seriesId: null }, "appointments");
+  } else if (res.act === "edit-series") {
+    if (items[0]) onEdit(items[0], "appointments", "series");
+  } else if (res.act === "del-series") {
+    delSeries(sid, items.length);
+  }
 }
 
 /* ===== حذف وتعديل ===== */
@@ -224,9 +405,9 @@ export async function onDelete(a) {
   }
 }
 
-export async function onEdit(a, from = "appointments") {
-  let scope = "one";
-  if (a.seriesId) {
+export async function onEdit(a, from = "appointments", forced = null) {
+  let scope = forced || "one";
+  if (a.seriesId && !forced) {
     const r = await dialog({
       icon: "repeat", title: "موعد متكرر", text: "شو بدك تعدّل؟",
       buttons: [
@@ -374,6 +555,8 @@ export function initAppointments() {
   };
 
   $("ap-list").onclick = (e) => {
+    const sc = e.target.closest(".ap-series");
+    if (sc) return openSeries(sc.dataset.sid);
     const btn = e.target.closest("[data-act]");
     if (!btn) return;
     const a = appts.find((x) => x.id === btn.closest(".ap-item").dataset.id);
