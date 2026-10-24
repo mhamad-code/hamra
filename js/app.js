@@ -1,18 +1,20 @@
-import { initExport } from "./export.js?v=1792876052";
-import { initNotifications, stopNotifications } from "./notifications.js?v=1792876052";
-import { initCalendar, stopCalendar } from "./calendar.js?v=1792876052";
-import { auth, ALLOWED_EMAIL } from "./firebase-config.js?v=1792876052";
+import { initExport } from "./export.js?v=1792876823";
+import { initNotifications, stopNotifications } from "./notifications.js?v=1792876823";
+import { initCalendar, stopCalendar } from "./calendar.js?v=1792876823";
+import { auth, ALLOWED_EMAIL } from "./firebase-config.js?v=1792876823";
 import {
   GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword,
   onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { initGroups, stopGroups } from "./groups.js?v=1792876052";
-import { initAppointments, stopAppointments } from "./appointments.js?v=1792876052";
-import { initRouter, refreshIcons, welcomeDialog } from "./ui.js?v=1792876052";
+import { initGroups, stopGroups } from "./groups.js?v=1792876823";
+import { initAppointments, stopAppointments } from "./appointments.js?v=1792876823";
+import { initRouter, refreshIcons, welcomeDialog } from "./ui.js?v=1792876823";
 
 const $ = (id) => document.getElementById(id);
 
 function showView(loggedIn) {
+  document.documentElement.removeAttribute("data-boot");
+  try { loggedIn ? localStorage.setItem("tm_in", "1") : localStorage.removeItem("tm_in"); } catch (e) {}
   $("login-view").classList.toggle("hidden", loggedIn);
   $("app-view").classList.toggle("hidden", !loggedIn);
   if (loggedIn) { initGroups(); initAppointments(); initCalendar(); initNotifications(); initExport(); initRouter(); }

@@ -1,8 +1,9 @@
-import { db } from "./firebase-config.js?v=1792876052";
+import { skNotifs } from "./ui.js?v=1792876823";
+import { db } from "./firebase-config.js?v=1792876823";
 import {
   collection, doc, onSnapshot, query, where, orderBy, writeBatch, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { refreshIcons, dialog, toast, fmtDate, fmtTime, MONTHS } from "./ui.js?v=1792876052";
+import { refreshIcons, dialog, toast, fmtDate, fmtTime, MONTHS } from "./ui.js?v=1792876823";
 
 const SOON_DAYS = 7;   // كم يوم قبل نهاية السلسلة يطلع التنبيه
 const DAYS = ["أحد", "اثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"];
@@ -13,6 +14,7 @@ const esc = (s = "") => String(s).replace(/[&<>"']/g, (c) =>
 
 let started = false, unsubS = null, unsubG = null;
 let groups = [], seriesDocs = [], notifs = [];
+let sReady = false, nGReady = false;
 
 const toIso = (d) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -83,6 +85,13 @@ function colorOf(a) {
 }
 
 function render() {
+  if (!sReady || !nGReady) {
+    $("notif-count").textContent = "";
+    $("nav-badge").classList.add("hidden");
+    $("notif-empty").classList.add("hidden");
+    $("notif-list").innerHTML = skNotifs(2);
+    return;
+  }
   notifs = analyze();
   $("notif-count").textContent = notifs.length;
   const nb = $("nav-badge");
@@ -143,6 +152,7 @@ async function remove(n) {
 export function initNotifications() {
   if (started) return;
   started = true;
+  render();
 
   $("notif-list").onclick = async (e) => {
     const btn = e.target.closest("[data-act]");
@@ -163,13 +173,13 @@ export function initNotifications() {
 
   unsubG = onSnapshot(
     query(collection(db, "groups"), orderBy("createdAt")),
-    (snap) => { groups = snap.docs.map((d) => ({ id: d.id, ...d.data() })); render(); },
-    (err) => console.error("groups:", err)
+    (snap) => { groups = snap.docs.map((d) => ({ id: d.id, ...d.data() })); nGReady = true; render(); },
+    (err) => { nGReady = true; render(); console.error("groups:", err); }
   );
   unsubS = onSnapshot(
     query(collection(db, "appointments"), where("seriesId", "!=", null)),
-    (snap) => { seriesDocs = snap.docs.map((d) => ({ id: d.id, ...d.data() })); render(); },
-    (err) => console.error("notifications:", err)
+    (snap) => { seriesDocs = snap.docs.map((d) => ({ id: d.id, ...d.data() })); sReady = true; render(); },
+    (err) => { sReady = true; render(); console.error("notifications:", err); }
   );
 }
 
@@ -178,5 +188,6 @@ export function stopNotifications() {
   if (unsubG) unsubG();
   unsubS = unsubG = null;
   seriesDocs = []; notifs = [];
+  sReady = nGReady = false;
   started = false;
 }

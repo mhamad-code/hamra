@@ -1,10 +1,11 @@
-import { db } from "./firebase-config.js?v=1792876052";
+import { skGroups, skCards } from "./ui.js?v=1792876823";
+import { db } from "./firebase-config.js?v=1792876823";
 import {
   collection, addDoc, updateDoc, deleteDoc, doc,
   onSnapshot, query, orderBy, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { go, state, refreshIcons, dialog, toast, fmtDate, fmtTime } from "./ui.js?v=1792876052";
-import { onEdit, onDelete, newForGroup } from "./appointments.js?v=1792876052";
+import { go, state, refreshIcons, dialog, toast, fmtDate, fmtTime } from "./ui.js?v=1792876823";
+import { onEdit, onDelete, newForGroup } from "./appointments.js?v=1792876823";
 
 const COLORS = ["#FFB23E", "#B892FF", "#5EEAD4", "#FF7A90", "#6EA8FF", "#A3E635"];
 const DAYS = ["أحد", "اثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"];
@@ -15,6 +16,7 @@ const esc = (s = "") => String(s).replace(/[&<>"']/g, (c) =>
 let started = false, unsub = null, unsubD = null;
 let color = COLORS[0], editingId = null, fromDetail = false;
 let groupsData = [], detailAppts = [];
+let gReady = false, dReady = false;
 
 const toIso = (d) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -53,6 +55,12 @@ function startEdit(g, fromD) {
 
 /* ===== قائمة المجموعات ===== */
 function renderList() {
+  if (!gReady) {
+    $("groups-count").textContent = "";
+    $("groups-empty").classList.add("hidden");
+    $("groups-list").innerHTML = skGroups(3);
+    return;
+  }
   $("groups-count").textContent = groupsData.length;
   $("groups-empty").classList.toggle("hidden", groupsData.length > 0);
   $("groups-list").innerHTML = groupsData.map((g) => `
@@ -90,6 +98,13 @@ function renderDetail() {
 
   $("gd-title").textContent = g.name;
   $("gd-dot").style.background = g.color;
+  if (!dReady) {
+    $("gd-series").innerHTML = "";
+    $("gd-list").innerHTML = skCards(3);
+    $("gd-empty").classList.add("hidden");
+    $("gd-past").classList.add("hidden");
+    return;
+  }
 
   const today = todayStr();
   const upcoming = detailAppts.filter((a) => a.date >= today)
@@ -137,14 +152,16 @@ function renderDetail() {
 function openGroup(id) {
   state.groupId = id;
   detailAppts = [];
+  dReady = false;
   if (unsubD) unsubD();
   unsubD = onSnapshot(
     query(collection(db, "appointments"), where("groupId", "==", id)),
     (snap) => {
       detailAppts = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      dReady = true;
       renderDetail();
     },
-    (err) => console.error("group appts:", err)
+    (err) => { dReady = true; renderDetail(); console.error("group appts:", err); }
   );
   renderDetail();
   go("group");
@@ -155,6 +172,7 @@ export function initGroups() {
   if (started) return;
   started = true;
   resetForm();
+  renderList();
 
   $("group-add-btn").onclick = () => { resetForm(); go("new-group"); };
   $("group-back").onclick = () => go(fromDetail && state.groupId ? "group" : "groups");
@@ -217,10 +235,11 @@ export function initGroups() {
     query(collection(db, "groups"), orderBy("createdAt")),
     (snap) => {
       groupsData = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      gReady = true;
       renderList();
       renderDetail();
     },
-    (err) => console.error("groups:", err)
+    (err) => { gReady = true; renderList(); console.error("groups:", err); }
   );
 }
 
@@ -228,6 +247,7 @@ export function stopGroups() {
   if (unsub) unsub();
   if (unsubD) unsubD();
   unsub = unsubD = null;
+  gReady = dReady = false;
   state.groupId = null;
   started = false;
 }

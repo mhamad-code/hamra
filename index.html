@@ -4,13 +4,35 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>الأستاذ محمود حديري</title>
-  <link rel="stylesheet" href="css/style.css?v=1792876052">
-  <link rel="stylesheet" href="css/print.css?v=1792876052">
+  <link rel="stylesheet" href="css/style.css?v=1792876823">
+  <link rel="stylesheet" href="css/print.css?v=1792876823">
+<script>
+    try { if (localStorage.getItem("tm_in") === "1") document.documentElement.setAttribute("data-boot", "app"); } catch (e) {}
+  </script>
 </head>
 <body>
   <div class="bg"><span></span><span></span><span></span></div>
 
   <!-- ===== شاشة الدخول ===== -->
+  <!-- شاشة الإقلاع: هيكل التطبيق قبل التحقق من الدخول -->
+  <section id="boot" class="view" aria-hidden="true">
+    <header>
+      <div class="brand"><div class="sk sk-circle" style="width:24px;height:24px"></div><div class="sk sk-l" style="width:160px;height:16px"></div></div>
+      <div class="sk sk-sq"></div>
+    </header>
+    <main>
+      <div class="page-head"><div class="sk sk-l" style="width:150px;height:24px"></div><div class="sk sk-pillbtn push"></div></div>
+      <div class="day"><div class="sk sk-h"></div><div class="ap-item glass sk-card"><div class="sk-time"><div class="sk sk-l" style="width:46px"></div><div class="sk sk-l" style="width:34px"></div></div><div class="sk-body"><div class="sk sk-pill"></div><div class="sk sk-l" style="width:62%"></div><div class="sk sk-l" style="width:42%"></div></div><div class="sk-acts"><div class="sk sk-sq"></div><div class="sk sk-sq"></div></div></div><div class="ap-item glass sk-card"><div class="sk-time"><div class="sk sk-l" style="width:46px"></div><div class="sk sk-l" style="width:34px"></div></div><div class="sk-body"><div class="sk sk-pill"></div><div class="sk sk-l" style="width:62%"></div><div class="sk sk-l" style="width:42%"></div></div><div class="sk-acts"><div class="sk sk-sq"></div><div class="sk sk-sq"></div></div></div></div><div class="day"><div class="sk sk-h"></div><div class="ap-item glass sk-card"><div class="sk-time"><div class="sk sk-l" style="width:46px"></div><div class="sk sk-l" style="width:34px"></div></div><div class="sk-body"><div class="sk sk-pill"></div><div class="sk sk-l" style="width:62%"></div><div class="sk sk-l" style="width:42%"></div></div><div class="sk-acts"><div class="sk sk-sq"></div><div class="sk sk-sq"></div></div></div><div class="ap-item glass sk-card"><div class="sk-time"><div class="sk sk-l" style="width:46px"></div><div class="sk sk-l" style="width:34px"></div></div><div class="sk-body"><div class="sk sk-pill"></div><div class="sk sk-l" style="width:62%"></div><div class="sk sk-l" style="width:42%"></div></div><div class="sk-acts"><div class="sk sk-sq"></div><div class="sk sk-sq"></div></div></div></div>
+    </main>
+    <div class="boot-nav glass">
+      <div class="sk sk-circle" style="width:26px;height:26px"></div>
+      <div class="sk sk-circle" style="width:26px;height:26px"></div>
+      <div class="sk sk-circle sk-fab"></div>
+      <div class="sk sk-circle" style="width:26px;height:26px"></div>
+      <div class="sk sk-circle" style="width:26px;height:26px"></div>
+    </div>
+  </section>
+
   <section id="login-view" class="view">
     <div class="login-wrap">
       <div class="hero">
@@ -225,6 +247,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.453.0/dist/umd/lucide.min.js"></script>
-  <script type="module" src="js/app.js?v=1792876052"></script>
+  <script type="module" src="js/app.js?v=1792876823"></script>
 </body>
 </html>

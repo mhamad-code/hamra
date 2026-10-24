@@ -206,3 +206,24 @@ export function welcomeDialog() {
     buttons: [{ label: "يلا نبدأ", value: true }]
   });
 }
+
+/* ===== هياكل التحميل (Skeleton) ===== */
+const skCard = () => `
+  <div class="ap-item glass sk-card">
+    <div class="sk-time"><div class="sk sk-l" style="width:46px"></div><div class="sk sk-l" style="width:34px"></div></div>
+    <div class="sk-body">
+      <div class="sk sk-pill"></div>
+      <div class="sk sk-l" style="width:62%"></div>
+      <div class="sk sk-l" style="width:42%"></div>
+    </div>
+    <div class="sk-acts"><div class="sk sk-sq"></div><div class="sk sk-sq"></div></div>
+  </div>`;
+export const skCards = (n = 3) => `<div class="day"><div class="sk sk-h"></div>${skCard().repeat(n)}</div>`;
+export const skGroups = (n = 3) => Array(n).fill(
+  `<li class="group-item glass sk-card"><div class="sk sk-circle"></div><div class="sk sk-l" style="flex:1;height:16px"></div><div class="sk sk-sq"></div><div class="sk sk-sq"></div></li>`
+).join("");
+export const skNotifs = (n = 2) => Array(n).fill(
+  `<div class="notif glass sk-notif"><div class="sk sk-pill"></div><div class="sk sk-l" style="width:55%;height:18px"></div><div class="sk sk-l" style="width:40%"></div><div class="sk sk-l" style="width:65%"></div><div class="sk sk-btn"></div></div>`
+).join("");
+export const skTimeline = () =>
+  `<div class="sk-tl"><div class="sk sk-block" style="height:88px"></div><div class="sk sk-block" style="height:62px;width:80%"></div><div class="sk sk-block" style="height:110px"></div></div>`;

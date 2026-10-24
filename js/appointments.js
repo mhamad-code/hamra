@@ -1,11 +1,12 @@
-import { db } from "./firebase-config.js?v=1792876052";
+import { skCards } from "./ui.js?v=1792876823";
+import { db } from "./firebase-config.js?v=1792876823";
 import {
   collection, addDoc, updateDoc, deleteDoc, doc, getDocs, writeBatch,
   onSnapshot, query, orderBy, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {
   go, state, openSheet, pickDate, pickTime, fmtDate, fmtTime, refreshIcons, dialog, toast
-} from "./ui.js?v=1792876052";
+} from "./ui.js?v=1792876823";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") => String(s).replace(/[&<>"']/g, (c) =>
@@ -17,6 +18,7 @@ const PERSONAL_COLOR = "#FF7A90";
 
 let started = false, unsubA = null, unsubG = null;
 let groups = [], appts = [];
+let gLoaded = false, aLoaded = false;
 let backTo = "appointments";
 let editingId = null, editScope = null, editingSeriesId = null;
 let selDate = null, selTime = null, apType = "group";
@@ -225,6 +227,12 @@ function seriesCard(en) {
 }
 
 function render() {
+  if (!gLoaded || !aLoaded) {
+    $("ap-count").textContent = "";
+    $("ap-empty").classList.add("hidden");
+    $("ap-list").innerHTML = skCards(2) + skCards(2);
+    return;
+  }
   const sorted = [...appts].sort((a, b) =>
     a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
 
@@ -459,6 +467,7 @@ export function initAppointments() {
   if (started) return;
   started = true;
   resetForm();
+  render();
 
   $("nav-add").onclick = () => {
     const fromCal = location.hash === "#calendar" && state.calDate;
@@ -568,19 +577,21 @@ export function initAppointments() {
     query(collection(db, "groups"), orderBy("createdAt")),
     (snap) => {
       groups = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      gLoaded = true;
       fillGroupSelect();
       render();
     },
-    (err) => console.error("groups:", err)
+    (err) => { gLoaded = true; render(); console.error("groups:", err); }
   );
 
   unsubA = onSnapshot(
     query(collection(db, "appointments"), where("date", ">=", todayStr()), orderBy("date")),
     (snap) => {
       appts = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      aLoaded = true;
       render();
     },
-    (err) => console.error("appointments:", err)
+    (err) => { aLoaded = true; render(); console.error("appointments:", err); }
   );
 }
 
@@ -588,5 +599,6 @@ export function stopAppointments() {
   if (unsubA) unsubA();
   if (unsubG) unsubG();
   unsubA = unsubG = null;
+  gLoaded = aLoaded = false;
   started = false;
 }

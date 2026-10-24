@@ -1,9 +1,10 @@
-import { db } from "./firebase-config.js?v=1792876052";
+import { skTimeline } from "./ui.js?v=1792876823";
+import { db } from "./firebase-config.js?v=1792876823";
 import {
   collection, onSnapshot, query, orderBy, where
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { state, refreshIcons, dialog, fmtDate, fmtTime, MONTHS } from "./ui.js?v=1792876052";
-import { onEdit, onDelete } from "./appointments.js?v=1792876052";
+import { state, refreshIcons, dialog, fmtDate, fmtTime, MONTHS } from "./ui.js?v=1792876823";
+import { onEdit, onDelete } from "./appointments.js?v=1792876823";
 
 const WEEK_START = 0;          // 0 = الأحد ، 6 = السبت
 const HOUR_H = 64;             // ارتفاع الساعة بالبكسل
@@ -16,6 +17,7 @@ const esc = (s = "") => String(s).replace(/[&<>"']/g, (c) =>
 
 let started = false, unsubA = null, unsubG = null, weekKey = null;
 let groups = [], weekAppts = [], selDay = null;
+let weekReady = false, cGReady = false;
 
 const toIso = (d) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -127,9 +129,15 @@ function render() {
   $("cal-day-title").textContent =
     `${fmtDate(selDay)}${selDay === today ? " · اليوم" : ""}${items.length ? ` · ${items.length} ${items.length > 2 ? "مواعيد" : items.length === 2 ? "موعدان" : "موعد"}` : ""}`;
 
-  $("cal-empty").classList.toggle("hidden", items.length > 0);
-  $("cal-timeline").classList.toggle("hidden", items.length === 0);
-  $("cal-timeline").innerHTML = items.length ? buildTimeline(items, selDay === today) : "";
+  if (!weekReady || !cGReady) {
+    $("cal-empty").classList.add("hidden");
+    $("cal-timeline").classList.remove("hidden");
+    $("cal-timeline").innerHTML = skTimeline();
+  } else {
+    $("cal-empty").classList.toggle("hidden", items.length > 0);
+    $("cal-timeline").classList.toggle("hidden", items.length === 0);
+    $("cal-timeline").innerHTML = items.length ? buildTimeline(items, selDay === today) : "";
+  }
   refreshIcons();
 }
 
@@ -147,6 +155,7 @@ function loadWeek() {
   if (key === weekKey) return;
   weekKey = key;
   weekAppts = [];
+  weekReady = false;
   if (unsubA) unsubA();
   const end = new Date(start);
   end.setDate(end.getDate() + 6);
@@ -154,9 +163,10 @@ function loadWeek() {
     query(collection(db, "appointments"), where("date", ">=", key), where("date", "<=", toIso(end))),
     (snap) => {
       weekAppts = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      weekReady = true;
       render();
     },
-    (err) => console.error("calendar:", err)
+    (err) => { weekReady = true; render(); console.error("calendar:", err); }
   );
 }
 
@@ -208,8 +218,8 @@ export function initCalendar() {
 
   unsubG = onSnapshot(
     query(collection(db, "groups"), orderBy("createdAt")),
-    (snap) => { groups = snap.docs.map((d) => ({ id: d.id, ...d.data() })); render(); },
-    (err) => console.error("groups:", err)
+    (snap) => { groups = snap.docs.map((d) => ({ id: d.id, ...d.data() })); cGReady = true; render(); },
+    (err) => { cGReady = true; render(); console.error("groups:", err); }
   );
 
   loadWeek();
@@ -220,6 +230,7 @@ export function stopCalendar() {
   if (unsubA) unsubA();
   if (unsubG) unsubG();
   unsubA = unsubG = null;
+  weekReady = cGReady = false;
   weekKey = null;
   state.calDate = null;
   started = false;
