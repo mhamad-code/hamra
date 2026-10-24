@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>الأستاذ محمود حديري</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/print.css">
+</head>
+<body>
+  <div class="bg"><span></span><span></span><span></span></div>
+
+  <!-- ===== شاشة الدخول ===== -->
+  <section id="login-view" class="view">
+    <div class="login-wrap">
+      <div class="hero">
+        <div class="logo"><i data-lucide="calendar-check"></i></div>
+        <p class="eyebrow">منصة إدارة المواعيد</p>
+        <h1>الأستاذ<br>محمود حديري</h1>
+        <p class="tagline">نظّم حصصك ومجموعاتك ومواعيدك المتكررة بمكان واحد، بكل سهولة وبدون ورق.</p>
+      </div>
+
+      <div class="chips">
+        <div class="chip glass"><i data-lucide="users"></i><span>مجموعات</span></div>
+        <div class="chip glass"><i data-lucide="repeat"></i><span>مواعيد متكررة</span></div>
+        <div class="chip glass"><i data-lucide="calendar-days"></i><span>تقويم أسبوعي</span></div>
+      </div>
+
+      <div class="card">
+        <h3>تسجيل الدخول</h3>
+        <button id="google-btn" class="google-btn" type="button">
+          <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
+          <span>المتابعة باستخدام Google</span>
+        </button>
+        <div class="divider"><span>أو</span></div>
+        <div class="field"><i data-lucide="mail"></i>
+          <input id="email" type="email" placeholder="الإيميل" autocomplete="username"></div>
+        <div class="field"><i data-lucide="lock"></i>
+          <input id="password" type="password" placeholder="كلمة السر" autocomplete="current-password"></div>
+        <button id="login-btn">دخول</button>
+        <p id="login-error" class="error"></p>
+      </div>
+      <p class="foot"><i data-lucide="shield-check"></i> الدخول مخصص للأستاذ فقط</p>
+    </div>
+  </section>
+
+  <!-- ===== التطبيق ===== -->
+  <section id="app-view" class="view hidden">
+    <header>
+      <div class="brand"><i data-lucide="graduation-cap"></i><h2>الأستاذ محمود حديري</h2></div>
+      <button id="logout-btn" class="icon-btn" aria-label="خروج"><i data-lucide="log-out"></i></button>
+    </header>
+
+    <main>
+      <!-- صفحة المواعيد -->
+      <section id="page-appointments" class="page">
+        <div class="page-head">
+          <h3>المواعيد القادمة</h3><span id="ap-count" class="badge">0</span>
+          <button id="export-btn" class="mini push" type="button"><i data-lucide="file-down"></i>تصدير PDF</button>
+        </div>
+        <div id="ap-list"></div>
+        <div id="ap-empty" class="empty"><i data-lucide="calendar-x"></i><p>ما في مواعيد قادمة</p></div>
+      </section>
+
+      <!-- صفحة الإشعارات -->
+      <section id="page-notifications" class="page hidden">
+        <div class="page-head">
+          <h3>الإشعارات</h3><span id="notif-count" class="badge">0</span>
+        </div>
+        <div id="notif-list"></div>
+        <div id="notif-empty" class="empty"><i data-lucide="bell-off"></i><p>ما في إشعارات حالياً</p><small>كل مواعيدك المتكررة سارية</small></div>
+      </section>
+
+      <!-- صفحة التقويم -->
+      <section id="page-calendar" class="page hidden">
+        <div class="page-head">
+          <h3>التقويم</h3>
+          <button id="cal-today" class="mini push" type="button"><i data-lucide="calendar-check"></i>اليوم</button>
+        </div>
+        <div class="week-nav glass">
+          <button id="cal-prev" class="icon-btn" type="button" aria-label="الأسبوع السابق"><i data-lucide="chevron-right"></i></button>
+          <strong id="cal-range"></strong>
+          <button id="cal-next" class="icon-btn" type="button" aria-label="الأسبوع التالي"><i data-lucide="chevron-left"></i></button>
+        </div>
+        <div id="cal-strip" class="week-strip"></div>
+        <h4 id="cal-day-title" class="cal-day-title"></h4>
+        <div id="cal-timeline" class="timeline hidden"></div>
+        <div id="cal-empty" class="empty"><i data-lucide="calendar-x"></i><p>ما في مواعيد بهاليوم</p></div>
+      </section>
+
+      <!-- صفحة المجموعات -->
+      <section id="page-groups" class="page hidden">
+        <div class="page-head">
+          <h3>المجموعات</h3><span id="groups-count" class="badge">0</span>
+          <button id="group-add-btn" class="mini push"><i data-lucide="plus"></i>مجموعة جديدة</button>
+        </div>
+        <ul id="groups-list" class="groups-list"></ul>
+        <div id="groups-empty" class="empty"><i data-lucide="users"></i><p>ما في مجموعات بعد</p></div>
+      </section>
+
+      <!-- صفحة تفاصيل المجموعة -->
+      <section id="page-group" class="page hidden">
+        <div class="page-head">
+          <button id="gd-back" class="icon-btn" type="button" aria-label="رجوع"><i data-lucide="arrow-right"></i></button>
+          <span id="gd-dot" class="dot big"></span>
+          <h3 id="gd-title"></h3>
+          <button id="gd-edit" class="icon-btn push" type="button" aria-label="تعديل المجموعة"><i data-lucide="pencil"></i></button>
+        </div>
+        <button id="gd-add" class="mini wide" type="button"><i data-lucide="plus"></i>موعد جديد لهذه المجموعة</button>
+        <div id="gd-series"></div>
+        <div id="gd-list"></div>
+        <div id="gd-empty" class="empty hidden"><i data-lucide="calendar-x"></i><p>ما في مواعيد لهذه المجموعة بعد</p></div>
+        <details id="gd-past" class="past hidden">
+          <summary><i data-lucide="history"></i><span id="gd-past-title"></span></summary>
+          <div id="gd-past-list"></div>
+        </details>
+      </section>
+
+      <!-- صفحة إضافة / تعديل موعد -->
+      <section id="page-new-appointment" class="page hidden">
+        <div class="page-head">
+          <button id="ap-back" class="icon-btn" type="button" aria-label="رجوع"><i data-lucide="arrow-right"></i></button>
+          <h3 id="ap-form-title">موعد جديد</h3>
+        </div>
+        <form id="ap-form" class="glass panel form">
+          <label>نوع الموعد</label>
+          <div class="seg three" id="ap-type-seg">
+            <button type="button" data-type="group" class="on"><i data-lucide="users"></i>مجموعة</button>
+            <button type="button" data-type="individual"><i data-lucide="user"></i>طالب فردي</button>
+            <button type="button" data-type="personal"><i data-lucide="user-round"></i>خاص</button>
+          </div>
+
+          <div id="ap-group-wrap"><label for="ap-group">المجموعة</label><select id="ap-group"></select></div>
+          <div id="ap-student-wrap" class="hidden"><label for="ap-student">اسم الطالب</label>
+            <input id="ap-student" type="text" placeholder="مثلاً: أحمد" maxlength="40"></div>
+
+          <label for="ap-title" id="ap-title-label">عنوان الموعد (اختياري)</label>
+          <input id="ap-title" type="text" placeholder="حصة رياضيات" maxlength="60">
+
+          <div class="row2">
+            <div><label>التاريخ</label>
+              <button type="button" class="pick" id="ap-date-btn"><i data-lucide="calendar-days"></i><span id="ap-date-label">اختر التاريخ</span></button></div>
+            <div><label>الساعة</label>
+              <button type="button" class="pick" id="ap-time-btn"><i data-lucide="clock"></i><span id="ap-time-label">اختر الساعة</span></button></div>
+          </div>
+
+          <p id="ap-series-note" class="note hidden"><i data-lucide="info"></i><span>التعديل رح ينطبق على كل المواعيد القادمة بالسلسلة (التواريخ ما بتتغير).</span></p>
+
+          <div id="ap-repeat-wrap">
+            <label class="switch-row" for="ap-repeat">
+              <span><i data-lucide="repeat"></i>موعد متكرر</span>
+              <input type="checkbox" id="ap-repeat" class="switch">
+            </label>
+            <div id="ap-repeat-opts" class="repeat-opts hidden">
+              <label>أيام التكرار</label>
+              <div id="ap-days" class="days"></div>
+              <label>ينتهي</label>
+              <div class="seg" id="ap-end-seg">
+                <button type="button" data-end="count" class="on">بعد عدد مرات</button>
+                <button type="button" data-end="until">بتاريخ معيّن</button>
+              </div>
+              <div id="ap-count-wrap" class="stepper">
+                <button type="button" id="cnt-minus" class="icon-btn" aria-label="أقل"><i data-lucide="minus"></i></button>
+                <b id="ap-rep-count">8</b>
+                <button type="button" id="cnt-plus" class="icon-btn" aria-label="أكثر"><i data-lucide="plus"></i></button>
+                <span>موعد</span>
+              </div>
+              <div id="ap-until-wrap" class="hidden">
+                <button type="button" class="pick" id="ap-until-btn"><i data-lucide="calendar-days"></i><span id="ap-until-label">اختر تاريخ النهاية</span></button>
+              </div>
+              <p id="ap-repeat-preview" class="preview"></p>
+            </div>
+          </div>
+
+          <div class="row2">
+            <div><label for="ap-duration">المدة</label>
+              <select id="ap-duration">
+                <option value="30">30 دقيقة</option>
+                <option value="45">45 دقيقة</option>
+                <option value="60" selected>ساعة</option>
+                <option value="90">ساعة ونصف</option>
+                <option value="120">ساعتين</option>
+                <option value="180">3 ساعات</option>
+              </select></div>
+            <div><label for="ap-location">المكان</label>
+              <input id="ap-location" type="text" placeholder="حضوري / أونلاين" maxlength="60"></div>
+          </div>
+
+          <label for="ap-notes">ملاحظات</label>
+          <textarea id="ap-notes" rows="2" maxlength="200"></textarea>
+
+          <button id="ap-submit" type="submit"><i data-lucide="check"></i>حفظ الموعد</button>
+        </form>
+      </section>
+
+      <!-- صفحة إضافة / تعديل مجموعة -->
+      <section id="page-new-group" class="page hidden">
+        <div class="page-head">
+          <button id="group-back" class="icon-btn" type="button" aria-label="رجوع"><i data-lucide="arrow-right"></i></button>
+          <h3 id="group-form-title">مجموعة جديدة</h3>
+        </div>
+        <form id="group-form" class="glass panel form">
+          <label for="group-name">اسم المجموعة</label>
+          <input id="group-name" type="text" placeholder="مثلاً: بكلوريا علمي" maxlength="40" required>
+          <label>اللون</label>
+          <div id="swatches" class="swatches"></div>
+          <button type="submit"><i data-lucide="check"></i>حفظ المجموعة</button>
+        </form>
+      </section>
+    </main>
+
+    <nav id="bottom-nav">
+      <button class="nav-item on" data-go="appointments"><i data-lucide="list-todo"></i><span>المواعيد</span></button>
+      <button class="nav-item" data-go="calendar"><i data-lucide="calendar-days"></i><span>التقويم</span></button>
+      <button class="nav-add" id="nav-add" aria-label="موعد جديد"><i data-lucide="plus"></i></button>
+      <button class="nav-item" data-go="groups"><i data-lucide="users"></i><span>المجموعات</span></button>
+    <button class="nav-item" data-go="notifications"><i data-lucide="bell"></i><span>الإشعارات</span><b id="nav-badge" class="nav-badge hidden">0</b></button>
+    </nav>
+  </section>
+
+  <!-- نافذة الاختيار (تقويم / ساعة) -->
+  <div id="sheet" class="sheet hidden">
+    <div id="sheet-bg" class="sheet-bg"></div>
+    <div id="sheet-body" class="sheet-card glass"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
