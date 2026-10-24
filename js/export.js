@@ -1,8 +1,8 @@
-import { db } from "./firebase-config.js?v=1792876823";
+import { db } from "./firebase-config.js?v=1792877538";
 import {
   collection, getDocs, orderBy, query
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { dialog, toast, fmtDate, fmtTime, MONTHS, refreshIcons } from "./ui.js?v=1792876823";
+import { dialog, toast, fmtDate, fmtTime, MONTHS, refreshIcons } from "./ui.js?v=1792877538";
 
 const PERSONAL_COLOR = "#FF7A90";
 const DAYS_FULL = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];

@@ -1,12 +1,12 @@
-import { skCards } from "./ui.js?v=1792876823";
-import { db } from "./firebase-config.js?v=1792876823";
+import { skCards } from "./ui.js?v=1792877538";
+import { db } from "./firebase-config.js?v=1792877538";
 import {
   collection, addDoc, updateDoc, deleteDoc, doc, getDocs, writeBatch,
   onSnapshot, query, orderBy, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {
   go, state, openSheet, pickDate, pickTime, fmtDate, fmtTime, refreshIcons, dialog, toast
-} from "./ui.js?v=1792876823";
+} from "./ui.js?v=1792877538";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") => String(s).replace(/[&<>"']/g, (c) =>
@@ -462,6 +462,51 @@ export function newForGroup(groupId) {
   go("new-appointment");
 }
 
+/* ===== تنبيه التعارض ===== */
+const hm2min = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+
+async function findConflicts(dates, startTime, durationMin, excludeIds = []) {
+  if (!dates.length) return [];
+  const sorted = [...dates].sort();
+  const snap = await getDocs(query(collection(db, "appointments"),
+    where("date", ">=", sorted[0]), where("date", "<=", sorted[sorted.length - 1])));
+  const wanted = new Set(dates);
+  const s1 = hm2min(startTime), e1 = s1 + durationMin;
+  const out = [];
+  snap.docs.forEach((d) => {
+    if (excludeIds.includes(d.id)) return;
+    const o = d.data();
+    if (!wanted.has(o.date)) return;
+    const s2 = hm2min(o.startTime), e2 = s2 + (o.durationMin || 0);
+    if (s1 < e2 && s2 < e1) out.push({ date: o.date, other: o });
+  });
+  return out.sort((a, b) => a.date.localeCompare(b.date) || a.other.startTime.localeCompare(b.other.startTime));
+}
+
+function conflictLine(c) {
+  const o = c.other;
+  const end = addMinutes(o.startTime, o.durationMin || 0);
+  const who = o.kind === "personal" ? "موعد خاص"
+    : o.groupId ? ((groups.find((x) => x.id === o.groupId) || {}).name || "مجموعة")
+    : (o.studentName || "طالب فردي");
+  return `${fmtDate(c.date)}\n${o.title} · ${who} (${fmtTime(o.startTime)} – ${fmtTime(end)})`;
+}
+
+function conflictDialog(conflicts) {
+  const n = conflicts.length;
+  const shown = conflicts.slice(0, 4).map(conflictLine).join("\n\n");
+  const more = n > 4 ? `\n\nو ${n - 4} ${n - 4 > 10 ? "تاريخ" : "تواريخ"} أخرى فيها تعارض` : "";
+  return dialog({
+    icon: "triangle-alert",
+    title: n === 1 ? "في موعد بيتعارض" : `في ${n} مواعيد بتتعارض`,
+    text: `الوقت المختار بيتداخل مع:\n\n${shown}${more}`,
+    buttons: [
+      { label: "حفظ على أي حال", value: "go" },
+      { label: "تغيير الوقت", value: null, ghost: true }
+    ]
+  });
+}
+
 /* ===== التشغيل ===== */
 export function initAppointments() {
   if (started) return;
@@ -522,6 +567,29 @@ export function initAppointments() {
       location: $("ap-location").value.trim(),
       notes: $("ap-notes").value.trim()
     };
+
+    // فحص التعارض قبل الحفظ (إذا فشل الفحص ما بنمنع الحفظ)
+    try {
+      let chkDates = [], exclude = [];
+      if (editingId && editScope === "series") {
+        const docs = await seriesDocs(editingSeriesId);
+        chkDates = docs.map((d) => d.data().date);
+        exclude = docs.map((d) => d.id);
+      } else if (editingId) {
+        chkDates = [selDate]; exclude = [editingId];
+      } else if (repeatOn) {
+        chkDates = genDates();
+      } else {
+        chkDates = [selDate];
+      }
+      const conflicts = await findConflicts(chkDates, selTime, Number($("ap-duration").value), exclude);
+      if (conflicts.length) {
+        const r = await conflictDialog(conflicts);
+        if (r !== "go") return;
+      }
+    } catch (err) {
+      console.error("conflict check:", err);
+    }
 
     const btn = $("ap-submit");
     btn.disabled = true;

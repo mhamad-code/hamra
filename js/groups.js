@@ -1,11 +1,11 @@
-import { skGroups, skCards } from "./ui.js?v=1792876823";
-import { db } from "./firebase-config.js?v=1792876823";
+import { skGroups, skCards } from "./ui.js?v=1792877538";
+import { db } from "./firebase-config.js?v=1792877538";
 import {
   collection, addDoc, updateDoc, deleteDoc, doc,
   onSnapshot, query, orderBy, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { go, state, refreshIcons, dialog, toast, fmtDate, fmtTime } from "./ui.js?v=1792876823";
-import { onEdit, onDelete, newForGroup } from "./appointments.js?v=1792876823";
+import { go, state, refreshIcons, dialog, toast, fmtDate, fmtTime } from "./ui.js?v=1792877538";
+import { onEdit, onDelete, newForGroup } from "./appointments.js?v=1792877538";
 
 const COLORS = ["#FFB23E", "#B892FF", "#5EEAD4", "#FF7A90", "#6EA8FF", "#A3E635"];
 const DAYS = ["أحد", "اثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"];
