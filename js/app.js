@@ -1,14 +1,14 @@
-import { initExport } from "./export.js?v=1792878025";
-import { initNotifications, stopNotifications } from "./notifications.js?v=1792878025";
-import { initCalendar, stopCalendar } from "./calendar.js?v=1792878025";
-import { auth, ALLOWED_EMAIL } from "./firebase-config.js?v=1792878025";
+import { initExport } from "./export.js?v=1792878371";
+import { initNotifications, stopNotifications } from "./notifications.js?v=1792878371";
+import { initCalendar, stopCalendar } from "./calendar.js?v=1792878371";
+import { auth, ALLOWED_EMAIL } from "./firebase-config.js?v=1792878371";
 import {
   GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword,
   onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { initGroups, stopGroups } from "./groups.js?v=1792878025";
-import { initAppointments, stopAppointments } from "./appointments.js?v=1792878025";
-import { initRouter, refreshIcons, welcomeDialog } from "./ui.js?v=1792878025";
+import { initGroups, stopGroups } from "./groups.js?v=1792878371";
+import { initAppointments, stopAppointments } from "./appointments.js?v=1792878371";
+import { initRouter, refreshIcons, welcomeDialog } from "./ui.js?v=1792878371";
 
 const $ = (id) => document.getElementById(id);
 

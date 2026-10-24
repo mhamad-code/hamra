@@ -1,4 +1,4 @@
-import { fmtTime, fmtDate, refreshIcons, MONTHS } from "./ui.js?v=1792878025";
+import { fmtTime, fmtDate, refreshIcons, MONTHS } from "./ui.js?v=1792878371";
 
 const PERSONAL_COLOR = "#FF7A90";
 const DAYS_FULL = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
@@ -16,12 +16,14 @@ const addMin = (t, mins) => {
 };
 const hoursOf = (min) => Math.round((min / 60) * 10) / 10;
 
-function untilText(mins) {
-  if (mins <= 0) return "هلأ";
-  if (mins < 60) return `بعد ${mins} دقيقة`;
-  const h = Math.floor(mins / 60), m = mins % 60;
-  const hs = h === 1 ? "ساعة" : h === 2 ? "ساعتين" : `${h} ساعات`;
-  return `بعد ${hs}${m ? ` و ${m} دقيقة` : ""}`;
+function countHtml(secs) {
+  secs = Math.max(0, secs);
+  const h = Math.floor(secs / 3600), m = Math.floor((secs % 3600) / 60), s = secs % 60;
+  const parts = [];
+  if (h) parts.push(h === 1 ? "<b>ساعة</b>" : h === 2 ? "<b>ساعتين</b>" : `<b>${h}</b> ساعات`);
+  if (h || m) parts.push(`<b>${m}</b> دقيقة`);
+  parts.push(`<b class="sec">${s}</b> ثانية`);
+  return parts.join(" و ");
 }
 
 function colorOf(a, groups) {
@@ -35,7 +37,7 @@ function whoOf(a, groups) {
   return a.studentName || "طالب فردي";
 }
 
-let data = null, timer = null, inited = false, lastHtml = "", observer = null, onVis = null;
+let data = null, timer = null, ticker = null, inited = false, lastHtml = "", observer = null, onVis = null;
 
 function skeleton() {
   const stat = `<div class="td-stat glass"><div class="sk sk-l" style="width:30px;height:20px;margin:0 auto 6px"></div><div class="sk sk-l" style="width:60%;margin:0 auto"></div></div>`;
@@ -68,7 +70,7 @@ function build({ appts, groups }) {
   /* ===== البطاقة الرئيسية ===== */
   let hero;
   if (live) {
-    const mins = Math.ceil((endOf(live) - now) / 60000);
+    const secs = Math.ceil((endOf(live) - now) / 1000);
     const pct = Math.min(100, Math.max(0, ((now - startOf(live)) / (endOf(live) - startOf(live))) * 100));
     const who = whoOf(live, groups);
     hero = `
@@ -80,14 +82,14 @@ function build({ appts, groups }) {
           <span><i data-lucide="clock"></i>${fmtTime(live.startTime)} – ${fmtTime(addMin(live.startTime, live.durationMin || 0))}</span>
           ${live.location ? `<span><i data-lucide="map-pin"></i>${esc(live.location)}</span>` : ""}
         </div>
-        <div class="td-count">ينتهي ${untilText(mins)}</div>
-        <div class="td-bar"><i style="width:${pct.toFixed(1)}%"></i></div>
+        <div class="td-count" data-ts="${endOf(live).getTime()}" data-pre="ينتهي بعد ">ينتهي بعد ${countHtml(secs)}</div>
+        <div class="td-bar" data-from="${startOf(live).getTime()}" data-to="${endOf(live).getTime()}"><i style="width:${pct.toFixed(1)}%"></i></div>
       </div>`;
   } else if (next) {
     const sameDay = next.date === today;
     const tomorrow = toIso(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
-    const diff = Math.ceil((startOf(next) - now) / 60000);
-    const when = sameDay ? untilText(diff) : next.date === tomorrow ? "غداً" : fmtDate(next.date);
+    const diff = Math.ceil((startOf(next) - now) / 1000);
+    const when = sameDay ? "بعد " + countHtml(diff) : next.date === tomorrow ? "غداً" : fmtDate(next.date);
     const who = whoOf(next, groups);
     hero = `
       <div class="td-hero glass" style="--c:${colorOf(next, groups)}">
@@ -98,7 +100,7 @@ function build({ appts, groups }) {
           <span><i data-lucide="clock"></i>${sameDay ? "" : fmtDate(next.date) + " · "}${fmtTime(next.startTime)} – ${fmtTime(addMin(next.startTime, next.durationMin || 0))}</span>
           ${next.location ? `<span><i data-lucide="map-pin"></i>${esc(next.location)}</span>` : ""}
         </div>
-        <div class="td-count">${when}</div>
+        <div class="td-count"${sameDay ? ` data-ts="${startOf(next).getTime()}" data-pre="بعد "` : ""}>${when}</div>
       </div>`;
   } else {
     hero = `
@@ -164,12 +166,30 @@ function draw() {
   refreshIcons();
 }
 
+function tick() {
+  if (document.hidden) return;
+  const now = Date.now();
+  let expired = false;
+  document.querySelectorAll("#today-dash [data-ts]").forEach((el) => {
+    const secs = Math.ceil((+el.dataset.ts - now) / 1000);
+    if (secs <= 0) { expired = true; return; }
+    el.innerHTML = el.dataset.pre + countHtml(secs);
+  });
+  document.querySelectorAll("#today-dash .td-bar[data-from]").forEach((b) => {
+    const f = +b.dataset.from, t = +b.dataset.to;
+    const pct = Math.min(100, Math.max(0, ((now - f) / (t - f)) * 100));
+    if (b.firstElementChild) b.firstElementChild.style.width = pct.toFixed(1) + "%";
+  });
+  if (expired) draw();
+}
+
 function init() {
   if (inited) return;
   inited = true;
   const el = $("today-dash");
   if (el) el.onclick = (e) => { if (e.target.closest("[data-notif]")) location.hash = "notifications"; };
   timer = setInterval(() => { if (!document.hidden) draw(); }, 30000);
+  ticker = setInterval(tick, 1000);
   onVis = () => { if (!document.hidden) draw(); };
   document.addEventListener("visibilitychange", onVis);
   const nb = $("nav-badge");
@@ -187,8 +207,9 @@ export function renderToday(d) {
 
 export function stopToday() {
   if (timer) clearInterval(timer);
+  if (ticker) clearInterval(ticker);
   if (observer) observer.disconnect();
   if (onVis) document.removeEventListener("visibilitychange", onVis);
-  timer = observer = onVis = null;
+  timer = ticker = observer = onVis = null;
   inited = false; data = null; lastHtml = "";
 }
