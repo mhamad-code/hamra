@@ -1,4 +1,4 @@
-const CACHE = "tm-1792879063";
+const CACHE = "tm-1792924831";
 const HOSTS = ["www.gstatic.com", "cdn.jsdelivr.net"];
 
 self.addEventListener("install", () => self.skipWaiting());

@@ -1,4 +1,4 @@
-import { refreshIcons } from "./ui.js?v=1792879063";
+import { refreshIcons } from "./ui.js?v=1792924831";
 
 const KEY = "tm_onb";
 const $ = (id) => document.getElementById(id);

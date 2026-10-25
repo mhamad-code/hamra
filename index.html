@@ -11,10 +11,18 @@
   <meta name="apple-mobile-web-app-title" content="مواعيد الأستاذ">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="icon" type="image/png" href="icons/icon-192.png">
-  <link rel="stylesheet" href="css/style.css?v=1792879063">
-  <link rel="stylesheet" href="css/print.css?v=1792879063">
+  <link rel="stylesheet" href="css/style.css?v=1792924831">
+  <link rel="stylesheet" href="css/print.css?v=1792924831">
 <script>
     try { if (localStorage.getItem("tm_in") === "1") document.documentElement.setAttribute("data-boot", "app"); } catch (e) {}
+  </script>
+<script>
+    try {
+      var t = localStorage.getItem("tm_theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", t);
+      var m = document.querySelector("meta[name=theme-color]");
+      if (m) m.setAttribute("content", t === "dark" ? "#1B1230" : "#B892FF");
+    } catch (e) {}
   </script>
 </head>
 <body>
@@ -80,6 +88,7 @@
     <header>
       <div class="brand"><i data-lucide="graduation-cap"></i><h2>الأستاذ محمود حديري</h2></div>
       <div class="hbtns">
+        <button id="theme-btn" class="icon-btn" aria-label="الوضع الداكن"><i data-lucide="moon"></i></button>
         <button id="info-btn" class="icon-btn" aria-label="عن التطبيق"><i data-lucide="info"></i></button>
         <button id="logout-btn" class="icon-btn" aria-label="خروج"><i data-lucide="log-out"></i></button>
       </div>
@@ -92,6 +101,19 @@
         <div class="page-head">
           <h3>المواعيد القادمة</h3><span id="ap-count" class="badge">0</span>
           <button id="export-btn" class="mini push" type="button"><i data-lucide="file-down"></i>تصدير PDF</button>
+        </div>
+        <div class="search-wrap">
+          <div class="search-box glass">
+            <i data-lucide="search"></i>
+            <input id="ap-search" type="search" placeholder="ابحث بالعنوان أو المجموعة أو الطالب..." autocomplete="off" enterkeyhint="search">
+            <button id="ap-search-clear" class="icon-btn hidden" type="button" aria-label="مسح البحث"><i data-lucide="x"></i></button>
+          </div>
+          <div id="ap-chips" class="fchips">
+            <button type="button" data-f="all" class="on">الكل</button>
+            <button type="button" data-f="group">مجموعات</button>
+            <button type="button" data-f="individual">فردي</button>
+            <button type="button" data-f="personal">خاص</button>
+          </div>
         </div>
         <div id="ap-list"></div>
         <div id="ap-empty" class="empty"><i data-lucide="calendar-x"></i><p>ما في مواعيد قادمة</p></div>
@@ -262,7 +284,7 @@
   <div id="onboarding" class="onb hidden"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.453.0/dist/umd/lucide.min.js"></script>
-  <script type="module" src="js/app.js?v=1792879063"></script>
+  <script type="module" src="js/app.js?v=1792924831"></script>
 <script>
     if ("serviceWorker" in navigator) {
       addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));

@@ -1,13 +1,13 @@
-import { renderToday, stopToday } from "./today.js?v=1792879063";
-import { skCards } from "./ui.js?v=1792879063";
-import { db } from "./firebase-config.js?v=1792879063";
+import { renderToday, stopToday } from "./today.js?v=1792924831";
+import { skCards } from "./ui.js?v=1792924831";
+import { db } from "./firebase-config.js?v=1792924831";
 import {
   collection, addDoc, updateDoc, deleteDoc, doc, getDocs, writeBatch,
   onSnapshot, query, orderBy, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {
   go, state, openSheet, pickDate, pickTime, fmtDate, fmtTime, refreshIcons, dialog, toast
-} from "./ui.js?v=1792879063";
+} from "./ui.js?v=1792924831";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s = "") => String(s).replace(/[&<>"']/g, (c) =>
@@ -227,6 +227,32 @@ function seriesCard(en) {
     </div>`;
 }
 
+/* ===== بحث وفلترة ===== */
+let fText = "", fType = "all";
+const norm = (s = "") => String(s).toLowerCase()
+  .replace(/[\u064B-\u065F\u0670\u0640]/g, "")
+  .replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه")
+  .replace(/\s+/g, " ").trim();
+const filterActive = () => fText.trim() !== "" || fType !== "all";
+
+function filterList(list) {
+  if (!filterActive()) return list;
+  const q = norm(fText);
+  return list.filter((a) => {
+    const personal = a.kind === "personal";
+    if (fType === "group" && (personal || !a.groupId)) return false;
+    if (fType === "individual" && (personal || a.groupId)) return false;
+    if (fType === "personal" && !personal) return false;
+    if (!q) return true;
+    const hay = norm([
+      a.title, aWho(a),
+      personal ? "موعد خاص شخصي" : a.groupId ? "درس مجموعة" : "درس فردي",
+      a.location, a.notes
+    ].join(" "));
+    return q.split(" ").every((w) => hay.includes(w));
+  });
+}
+
 function render() {
   if (!gLoaded || !aLoaded) {
     $("ap-count").textContent = "";
@@ -235,7 +261,7 @@ function render() {
     renderToday(null);
     return;
   }
-  const sorted = [...appts].sort((a, b) =>
+  const sorted = filterList([...appts]).sort((a, b) =>
     a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
 
   const bySid = {}, entries = [];
@@ -252,8 +278,11 @@ function render() {
   }
 
   renderToday({ appts, groups });
+  $("today-dash").classList.toggle("hidden", filterActive());
   $("ap-count").textContent = entries.length;
   $("ap-empty").classList.toggle("hidden", entries.length > 0);
+  const emp = $("ap-empty").querySelector("p");
+  if (emp) emp.textContent = filterActive() ? "ما في نتائج للبحث" : "ما في مواعيد قادمة";
 
   let html = "", last = "";
   for (const en of entries) {
@@ -525,6 +554,17 @@ export function initAppointments() {
   };
   $("ap-back").onclick = () => go(backTo);
 
+  const si = $("ap-search"), sc = $("ap-search-clear");
+  si.oninput = () => { fText = si.value; sc.classList.toggle("hidden", !fText); render(); };
+  sc.onclick = () => { si.value = ""; fText = ""; sc.classList.add("hidden"); si.focus(); render(); };
+  $("ap-chips").onclick = (e) => {
+    const b = e.target.closest("[data-f]");
+    if (!b) return;
+    fType = b.dataset.f;
+    document.querySelectorAll("#ap-chips [data-f]").forEach((x) => x.classList.toggle("on", x === b));
+    render();
+  };
+
   $("ap-type-seg").onclick = (e) => {
     const b = e.target.closest("[data-type]");
     if (b) setType(b.dataset.type);
@@ -671,6 +711,7 @@ export function stopAppointments() {
   if (unsubG) unsubG();
   unsubA = unsubG = null;
   gLoaded = aLoaded = false;
+  fText = ""; fType = "all";
   stopToday();
   started = false;
 }

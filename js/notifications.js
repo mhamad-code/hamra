@@ -1,9 +1,9 @@
-import { skNotifs } from "./ui.js?v=1792879063";
-import { db } from "./firebase-config.js?v=1792879063";
+import { skNotifs } from "./ui.js?v=1792924831";
+import { db } from "./firebase-config.js?v=1792924831";
 import {
   collection, doc, onSnapshot, query, where, orderBy, writeBatch, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { refreshIcons, dialog, toast, fmtDate, fmtTime, MONTHS } from "./ui.js?v=1792879063";
+import { refreshIcons, dialog, toast, fmtDate, fmtTime, MONTHS } from "./ui.js?v=1792924831";
 
 const SOON_DAYS = 7;   // كم يوم قبل نهاية السلسلة يطلع التنبيه
 const DAYS = ["أحد", "اثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"];
